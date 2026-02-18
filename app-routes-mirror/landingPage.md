@@ -7,4 +7,4 @@
     If logged in: show user profile from link in user.profile_link
     If not logged in: show Basic Avatar
     Use Shadcn component for this
-    
+4. Below Header make the site  professional, theme-matching, aesthetic and friendly.

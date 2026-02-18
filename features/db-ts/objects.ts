@@ -6,7 +6,7 @@ export type StaffRole = (typeof StaffRoles)[number];
 export const Roles = ["admin", "owner", "manager", "teacher", "student"] as const;
 export type Role = (typeof Roles)[number];
 
-export const OrgStatuses = ["pending", "active", "suspended"] as const;
+export const OrgStatuses = ["active", "suspended"] as const;
 export type OrgStatus = (typeof OrgStatuses)[number];
 
 export type QuestionType = "mcq" | "short_answer";
@@ -23,8 +23,8 @@ export interface AceVerseUserMetadata {
 }
 
 export type AceVerseUser = User & { user_metadata: AceVerseUserMetadata };
+export type MiniUser = Required<Pick<AceVerseUser, "id" | "email">> ;
 export type uid = AceVerseUser["id"];
-
 
 /**
  * @MappingRulesForAI
@@ -73,21 +73,24 @@ export type Membership = DBMembership & {
   organization: OrganizationForMembership;
 };
 
-
+export interface Userfetched {
+  user: MiniUser;
+  memberships: Membership[];
+}
 // -----------------------------------------------------------
 /**
- * @orgcontentpolicy 
+ * @orgcontentpolicy - if organizations.status = 'active'
  * "Teacher/Managers within organization can do anything"
  * "Students within organization can only access"
  */
 
 /**
- * @staffonlypolicy
+ * @staffonlypolicy - if organizations.status = 'active'
  * "Teacher/Managers within organization can do anything with it"
  */
 
 /**
- * @staffonlyreadpolicy
+ * @staffonlyreadpolicy - if organizations.status = 'active'
  * "Teacher/Managers within organization can select only"
  */
 
@@ -114,6 +117,7 @@ export interface DBExam {
   description: string | null;
   created_by: string | null;
   is_published: boolean;
+  has_publishable_changes: boolean;
 
   duration: number;
   start_time: string | null;
@@ -138,18 +142,12 @@ export interface DBExam {
 
 /** @staffonlypolicy  */
 export interface DBExamBatchMapper {
+  organization_id: DBOrganization["id"];
   exam_id: DBExam["id"];
   batch_id: DBBatch["id"];
 }
 
-export type ExamForBuilding = DBExam & {
-  segments: DBExamSegment[];
-  questions: DBQuestion[];
-  exam_groups: DBBatch[];
-  total_marks: number; // DEFAULT: 0
-  total_questions: number; // DEFAULT: 0
-  allowed_batched: DBBatch[]; // DEFAULT: []
-};
+export type ExamWhileBuilding = WithRequired<Partial<DBExam>, "id" | "organization_id">;
 
 export type ExamForTaking = DBExam & {
   segments: ExamSegmentForTakingExam[];
@@ -157,7 +155,6 @@ export type ExamForTaking = DBExam & {
   total_marks: number; // DEFAULT: 0
   total_questions: number; // DEFAULT: 0
 };
-
 
 /** @staffonlypolicy  */
 export interface DBQuestion<T extends QuestionType = QuestionType> {
@@ -181,6 +178,7 @@ export interface DBQuestion<T extends QuestionType = QuestionType> {
 
 /** @staffonlypolicy  */
 export interface DBQuestionBatchMapper {
+  organization_id: DBOrganization["id"];
   question_id: DBQuestion["id"];
   batch_id: DBBatch["id"];
   // UNIQUE(question_id, batch_id)
@@ -200,6 +198,7 @@ export type QuestionWhileBuilding = WithRequired<
 /** @orgcontentpolicy  */
 export interface DBExamSegment {
   id: string;
+  organization_id: DBOrganization["id"];
   exam_id: DBExam["id"];
   // UNIQUE CONSTRAINT(id, exam_id)
   name: string;
@@ -224,6 +223,7 @@ export type ExamSegmentWhileBuilding = WithRequired<
 /** @staffonlyreadpolicy  */
 export interface DBSubmission {
   id: string;
+  organization_id: DBOrganization["id"];
   exam_id: DBExam["id"];
   student_id: AceVerseUser["id"];
   started_at: string;
@@ -234,6 +234,7 @@ export interface DBSubmission {
 // CREATE TRIGGER: if exam.allow_instant_answer then instant grade calc
 export interface DBSubmissionSecretData { 
   submission_id: DBSubmission["id"];
+  organization_id: DBOrganization["id"];
   exam_id: DBExam["id"];
   is_graded: boolean;
   total_score: number | null;
@@ -248,6 +249,7 @@ export type SubmissionForTakingExam = DBSubmission & {
 /** @staffonlyreadpolicy  */
 export interface DBAnswer {
   id: string;
+  organization_id: DBOrganization["id"];
   submission_id: DBSubmission["id"];
   question_id: DBQuestion["id"];
   answer_text: string | null;
@@ -262,6 +264,7 @@ export interface DBBatch {
 
 /** @staffonlypolicy  */
 export interface DBBatchMemberMapper {
+  organization_id: DBOrganization["id"];
   batch_id: string;
   student_id: uid; 
   // UNIQUE(batch_id, student_id)
@@ -276,4 +279,5 @@ export interface DBOrgJoinRequest {
   for_role: Omit<Role, "owner" | "admin">; // CHECK for role in Omit<Role, "owner" | "admin"> coversion for this type context
   status: "pending" | "rejected";
   created_at: string;
+  // UNIQUE(student_id, org_id)
 }

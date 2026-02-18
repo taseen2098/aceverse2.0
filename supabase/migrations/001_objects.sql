@@ -3,198 +3,159 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ================= TABLES =================
 
--- Organizations
+-- 1. Organizations
 CREATE TABLE IF NOT EXISTS public.organizations (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
-  status TEXT DEFAULT 'active' CHECK (status IN ('pending', 'active', 'suspended')),
-  is_deleted BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+  owner_id UUID REFERENCES auth.users(id) NOT NULL,
+  status TEXT CHECK (status IN ('active', 'suspended')) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- Profiles (Users)
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  full_name TEXT,
-  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
-);
-
--- Memberships
+-- 2. Memberships
 CREATE TABLE IF NOT EXISTS public.memberships (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
-  member_role TEXT NOT NULL CHECK (member_role IN ('primary_owner', 'manager', 'teacher', 'student')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  UNIQUE(user_id, organization_id)
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  member_role TEXT CHECK (member_role IN ('admin', 'owner', 'manager', 'teacher', 'student')) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  on_free_trial BOOLEAN DEFAULT FALSE NOT NULL
 );
 
--- Subjects
+-- 3. Subjects
 CREATE TABLE IF NOT EXISTS public.subjects (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+  UNIQUE(id, organization_id)
 );
 
--- Exams
+-- 4. Exams
 CREATE TABLE IF NOT EXISTS public.exams (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
-  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  is_active BOOLEAN DEFAULT false,
-  duration INTEGER NOT NULL, -- in minutes
+  created_by UUID REFERENCES auth.users(id),
+  is_published BOOLEAN DEFAULT FALSE NOT NULL,
+  has_publishable_changes BOOLEAN DEFAULT TRUE NOT NULL,
+  duration INTEGER NOT NULL,
+  start_time TIMESTAMPTZ,
+  end_time TIMESTAMPTZ,
+
+
   pass_threshold_type TEXT CHECK (pass_threshold_type IN ('percentile', 'fixed', 'none')),
   pass_threshold_value NUMERIC,
-  has_negative_marking BOOLEAN DEFAULT false,
-  negative_marks_value NUMERIC DEFAULT 0.25,
-  total_marks NUMERIC,
-  allowed_attempts INTEGER DEFAULT 1,
-  access_control_type TEXT CHECK (access_control_type IN ('public', 'group_based')) DEFAULT 'public',
-  start_time TIMESTAMP WITH TIME ZONE,
-  end_time TIMESTAMP WITH TIME ZONE,
-  results_published BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+  has_negative_marking BOOLEAN DEFAULT FALSE NOT NULL,
+  negative_marks_value NUMERIC DEFAULT 0 NOT NULL,
+  allowed_attempts INTEGER DEFAULT 1 NOT NULL,
+  allow_type TEXT CHECK (allow_type IN ('public', 'group_based', 'everyone_in_org')) NOT NULL,
+  allow_instant_result BOOLEAN DEFAULT FALSE NOT NULL,
+  result_scheduled_at TIMESTAMPTZ,
+  results_published BOOLEAN DEFAULT FALSE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE(id, organization_id)
 );
 
--- Exam Segments
+-- 5. Exam Segments
 CREATE TABLE IF NOT EXISTS public.exam_segments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
-  order_index TEXT, -- Fractional Indexing
-  requires_individual_pass BOOLEAN DEFAULT false,
+  order_index TEXT NOT NULL,
+  requires_individual_pass BOOLEAN DEFAULT FALSE NOT NULL,
   pass_threshold_type TEXT CHECK (pass_threshold_type IN ('percentile', 'fixed', 'none')),
   pass_threshold_value NUMERIC,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+  UNIQUE(id, exam_id)
 );
 
--- Questions
+-- 6. Questions
 CREATE TABLE IF NOT EXISTS public.questions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
-  subject_id UUID REFERENCES public.subjects(id) ON DELETE SET NULL,
-  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE, -- Nullable
-  segment_id UUID REFERENCES public.exam_segments(id) ON DELETE SET NULL,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  subject_id UUID REFERENCES public.subjects(id),
+  exam_id UUID REFERENCES public.exams(id),
+  segment_id UUID REFERENCES public.exam_segments(id),
   question_text TEXT NOT NULL,
-  question_type TEXT NOT NULL CHECK (question_type IN ('mcq', 'short_answer')),
+  question_type TEXT CHECK (question_type IN ('mcq', 'short_answer')) NOT NULL,
   options JSONB,
-  correct_answer TEXT NOT NULL,
-  marks NUMERIC NOT NULL DEFAULT 1,
+  correct_answer TEXT,
+  marks NUMERIC DEFAULT 0 NOT NULL,
   negative_marks NUMERIC,
   correct_feedback TEXT,
   incorrect_feedback TEXT,
-  order_index TEXT, -- Fractional Indexing
-  is_exam_question BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  CONSTRAINT check_exam_id_if_not_exam_question CHECK ((is_exam_question = TRUE) OR (exam_id IS NULL))
+  order_index TEXT NOT NULL,
+  UNIQUE(id, organization_id)
 );
 
--- Submissions
+-- 7. Batches
+CREATE TABLE IF NOT EXISTS public.batches (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL
+);
+
+-- 8. Exam Batch Mapper
+CREATE TABLE IF NOT EXISTS public.exam_batch_mapper (
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
+  batch_id UUID REFERENCES public.batches(id) ON DELETE CASCADE NOT NULL,
+  PRIMARY KEY (exam_id, batch_id)
+);
+
+-- 9. Question Batch Mapper
+CREATE TABLE IF NOT EXISTS public.question_batch_mapper (
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE NOT NULL,
+  batch_id UUID REFERENCES public.batches(id) ON DELETE CASCADE NOT NULL,
+  PRIMARY KEY (question_id, batch_id)
+);
+
+-- 10. Batch Member Mapper
+CREATE TABLE IF NOT EXISTS public.batch_member_mapper (
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  batch_id UUID REFERENCES public.batches(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  UNIQUE(batch_id, student_id)
+);
+
+-- 11. Submissions
 CREATE TABLE IF NOT EXISTS public.submissions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE,
-  student_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  status TEXT DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'submitted')),
-  started_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  submitted_at TIMESTAMP WITH TIME ZONE,
-  time_spent INTEGER,
-  is_graded BOOLEAN DEFAULT false,
-  graded_at TIMESTAMP WITH TIME ZONE,
-  graded_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  total_score NUMERIC,
-  max_score NUMERIC,
-  percentage NUMERIC,
-  passed BOOLEAN,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES auth.users(id) NOT NULL,
+  started_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  submitted_at TIMESTAMPTZ
 );
 
--- Answers
+-- 12. Submission Secret Data
+CREATE TABLE IF NOT EXISTS public.submission_secret_data (
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE NOT NULL PRIMARY KEY,
+  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
+  is_graded BOOLEAN DEFAULT FALSE NOT NULL,
+  total_score NUMERIC
+);
+
+-- 13. Answers
 CREATE TABLE IF NOT EXISTS public.answers (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE,
-  question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE,
-  answer_text TEXT,
-  is_correct BOOLEAN,
-  is_marked BOOLEAN DEFAULT false,
-  marks_awarded NUMERIC,
-  answered_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  UNIQUE(submission_id, question_id)
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE NOT NULL,
+  question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE NOT NULL,
+  answer_text TEXT
 );
 
--- Segment Scores
-CREATE TABLE IF NOT EXISTS public.segment_scores (
+-- 14. Org Join Requests
+CREATE TABLE IF NOT EXISTS public.org_join_requests (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE,
-  segment_id UUID REFERENCES public.exam_segments(id) ON DELETE CASCADE,
-  score NUMERIC,
-  max_score NUMERIC,
-  percentage NUMERIC,
-  passed BOOLEAN,
-  total_questions INTEGER,
-  answered INTEGER,
-  correct INTEGER,
-  incorrect INTEGER,
-  skipped INTEGER,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  UNIQUE(submission_id, segment_id)
+  org_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES auth.users(id) NOT NULL,
+  for_role TEXT CHECK (for_role IN ('manager', 'teacher', 'student')) NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'rejected')) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE(student_id, org_id)
 );
-
--- Student Groups
-CREATE TABLE IF NOT EXISTS public.student_groups (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
-);
-
--- Group Members
-CREATE TABLE IF NOT EXISTS public.group_members (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  group_id UUID REFERENCES public.student_groups(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  UNIQUE(group_id, user_id)
-);
-
--- Exam Groups
-CREATE TABLE IF NOT EXISTS public.exam_groups (
-  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE,
-  group_id UUID REFERENCES public.student_groups(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  PRIMARY KEY (exam_id, group_id)
-);
-
--- Join Requests
-CREATE TABLE IF NOT EXISTS public.join_requests (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE,
-  student_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
-  message TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
-  UNIQUE(exam_id, student_id)
-);
-
--- ================= INDEXES =================
-CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON public.memberships(user_id);
-CREATE INDEX IF NOT EXISTS idx_memberships_org_id ON public.memberships(organization_id);
-CREATE INDEX IF NOT EXISTS idx_exams_org_id ON public.exams(organization_id);
-CREATE INDEX IF NOT EXISTS idx_questions_org_id ON public.questions(organization_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON public.group_members(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON public.group_members(user_id);
-CREATE INDEX IF NOT EXISTS idx_exam_groups_exam_id ON public.exam_groups(exam_id);
-CREATE INDEX IF NOT EXISTS idx_exam_groups_group_id ON public.exam_groups(group_id);
