@@ -10,11 +10,13 @@ A Senior software developer building eLMS
   -/login
   -/register
   -/forgot-password
+  -/change-password
   -/unauthorized
   -/profile
-  -/settings
 
 admin/
+
+create-org/
 
 org/
   -/dashboard

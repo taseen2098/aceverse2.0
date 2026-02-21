@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   name TEXT NOT NULL,
   owner_id UUID REFERENCES auth.users(id) NOT NULL,
   status TEXT CHECK (status IN ('active', 'suspended')) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+  logo_url TEXT,
+  theme_color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  join_system TEXT CHECK (join_system IN ('public', 'request')) NOT NULL
 );
 
 -- 2. Memberships
@@ -19,7 +22,26 @@ CREATE TABLE IF NOT EXISTS public.memberships (
   organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   member_role TEXT CHECK (member_role IN ('admin', 'owner', 'manager', 'teacher', 'student')) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  on_free_trial BOOLEAN DEFAULT FALSE NOT NULL
+  status TEXT CHECK (status IN ('active', 'suspended', 'pending', 'cancelled')) NOT NULL,
+  on_free_trial BOOLEAN DEFAULT FALSE NOT NULL,
+  subscribed_upto TIMESTAMPTZ
+);
+
+-- 3. Payments
+CREATE TABLE IF NOT EXISTS public.payments (
+  -- Internal unique reference
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  membership_id UUID REFERENCES public.memberships(id) ON DELETE CASCADE NOT NULL,
+  -- The ID you send to SSLCommerz (Your internal tracking ID)
+  tran_id TEXT UNIQUE NOT NULL, 
+  -- The ID SSLCommerz gives back after successful validation (Bank Ref)
+  bank_tran_id TEXT UNIQUE,
+  amount NUMERIC NOT NULL,
+  currency TEXT DEFAULT 'BDT',
+  -- Essential for 1:Many payment tracking
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- 3. Subjects
@@ -36,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.exams (
   organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
-  created_by UUID REFERENCES auth.users(id),
+  created_by UUID REFERENCES public.memberships(id),
   is_published BOOLEAN DEFAULT FALSE NOT NULL,
   has_publishable_changes BOOLEAN DEFAULT TRUE NOT NULL,
   duration INTEGER NOT NULL,
@@ -61,7 +83,7 @@ CREATE TABLE IF NOT EXISTS public.exams (
 -- 5. Exam Segments
 CREATE TABLE IF NOT EXISTS public.exam_segments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   order_index TEXT NOT NULL,
@@ -86,7 +108,7 @@ CREATE TABLE IF NOT EXISTS public.questions (
   negative_marks NUMERIC,
   correct_feedback TEXT,
   incorrect_feedback TEXT,
-  order_index TEXT NOT NULL,
+  order_index TEXT,
   UNIQUE(id, organization_id)
 );
 
@@ -117,23 +139,23 @@ CREATE TABLE IF NOT EXISTS public.question_batch_mapper (
 CREATE TABLE IF NOT EXISTS public.batch_member_mapper (
   organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   batch_id UUID REFERENCES public.batches(id) ON DELETE CASCADE NOT NULL,
-  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES public.memberships(id) ON DELETE CASCADE NOT NULL,
   UNIQUE(batch_id, student_id)
 );
 
 -- 11. Submissions
 CREATE TABLE IF NOT EXISTS public.submissions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
-  student_id UUID REFERENCES auth.users(id) NOT NULL,
+  student_id UUID REFERENCES public.memberships(id) NOT NULL,
   started_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   submitted_at TIMESTAMPTZ
 );
 
 -- 12. Submission Secret Data
 CREATE TABLE IF NOT EXISTS public.submission_secret_data (
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE NOT NULL PRIMARY KEY,
   exam_id UUID REFERENCES public.exams(id) ON DELETE CASCADE NOT NULL,
   is_graded BOOLEAN DEFAULT FALSE NOT NULL,
@@ -143,7 +165,7 @@ CREATE TABLE IF NOT EXISTS public.submission_secret_data (
 -- 13. Answers
 CREATE TABLE IF NOT EXISTS public.answers (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL
+  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL,
   submission_id UUID REFERENCES public.submissions(id) ON DELETE CASCADE NOT NULL,
   question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE NOT NULL,
   answer_text TEXT
@@ -158,4 +180,15 @@ CREATE TABLE IF NOT EXISTS public.org_join_requests (
   status TEXT CHECK (status IN ('pending', 'rejected')) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   UNIQUE(student_id, org_id)
+);
+
+-- 16. Announcements
+CREATE TABLE IF NOT EXISTS public.announcements (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  org_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE NOT NULL, 
+  created_by UUID REFERENCES public.memberships(id) NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );

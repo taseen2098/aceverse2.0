@@ -1,7 +1,6 @@
 # Rules: MUST FOLLOW
-after each prompt log the prompt in promptlog/log1.md
+after each prompt log the prompt in promptlog/[Date].md
 mention date and time in the log.
-create a new log file if one exceeds 500 line.
 
 
 # Frameworks
@@ -10,6 +9,4 @@ create a new log file if one exceeds 500 line.
 
 2. Use Shadcn components for ui
 
-3. use Tanstack query on:
-  students fetching:
 

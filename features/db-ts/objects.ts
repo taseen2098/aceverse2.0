@@ -42,6 +42,9 @@ export type uid = AceVerseUser["id"];
  */
 
 
+type JoinSystem = "public" | "request";
+
+
 /**
  * @policy "Owners manage organization"
  * @policy "Teachers and Managers can SELECT organization"
@@ -51,6 +54,9 @@ interface DBOrganization {
   name: string;
   owner_id: uid;
   status: OrgStatus;
+  logo_url: string | null;
+  theme_color: string | null;
+  join_system: JoinSystem;
   created_at: string;
 }
 export type Organization = Omit<DBOrganization, "owner_id">;
@@ -72,6 +78,20 @@ interface DBMembership {
 export type Membership = DBMembership & {
   organization: OrganizationForMembership;
 };
+
+export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
+
+export interface DBPayment {
+  id: string;
+  membership_id: string;
+  tran_id: string;         // Your Order ID (sent to SSL)
+  bank_tran_id: string | null; // SSL's ID (received from SSL)
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Userfetched {
   user: MiniUser;
@@ -173,7 +193,7 @@ export interface DBQuestion<T extends QuestionType = QuestionType> {
   negative_marks: number | null;
   correct_feedback: string | null;
   incorrect_feedback: string | null;
-  order_index: string; // ordered using fractional-indexing framework in client/server side
+  order_index?: string; // ordered using fractional-indexing framework in client/server side
 }
 
 /** @staffonlypolicy  */
@@ -192,6 +212,11 @@ export type QuestionForTakingExam = Omit<
 export type QuestionWhileBuilding = WithRequired<
   Partial<DBQuestion>,
   "id" | "question_type" | "order_index"
+>;
+
+export type QuestionWhileBuildingForSingle = WithRequired<
+  Partial<DBQuestion>,
+  "id" | "question_type"
 >;
 
 
@@ -281,3 +306,19 @@ export interface DBOrgJoinRequest {
   created_at: string;
   // UNIQUE(student_id, org_id)
 }
+
+export interface DBAnnouncement {
+  id: string; // UUID
+  org_id: string; // UUID (Foreign Key to organizations)
+  created_by: string; // UUID (Foreign Key to memberships)
+  title: string;
+  content: string;
+  created_at: string; // ISO Date String
+  updated_at: string; // ISO Date String
+}
+
+// For creating a new announcement (omitting generated fields)
+export type CreateAnnouncement = Omit<DBAnnouncement, 'id' | 'created_at' | 'updated_at'>;
+
+// For updates (all fields optional except ID)
+export type UpdateAnnouncement = Partial<CreateAnnouncement> & { id: string };
