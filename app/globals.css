@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -45,59 +44,246 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* Custom AceVerse Palette */
-  --color-aceverse-navy: #0f172a;
+  --color-aceverse-navy: var(--primary-deep);
   --color-aceverse-blue: var(--primary-color);
   --color-aceverse-ice: #f0f9ff;
 }
 
 @layer base {
   /* Dynamic Mapping */
-  :root[data-theme='blue'] { --primary-color: 221.2 83.2% 53.3%; }
-  :root[data-theme='rose'] { --primary-color: 346.8 77.2% 49.8%; }
-  :root[data-theme='green'] { --primary-color: 142.1 76.2% 36.3%; }
+
+  /* 0. Basic */
+  :root[data-theme="blue"] {
+    --background: #f0f9ff; /* Sky 50 */
+    --foreground: #0f172a; /* Slate 900 */
+    --primary-color: #0ea5e9;
+    --primary-deep: #0f172a;
+    --secondary: #0f172a; /* Slate 900 */
+    --secondary-foreground: #f0f9ff;
+    --accent: #e0f2fe;
+    --muted: #e2e8f0;
+    --popover-foreground: #0f172a;
+    --border: #e2e8f0;
+    --card-foreground: #0f172a;
+    --input: #e2e8f0;
+    --chart-2: #0f172a;
+    --chart-3: #38bdf8;
+    --chart-4: #7dd3fc;
+    --chart-5: #bae6fd;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #0f172a;
+    --sidebar-accent: #f0f9ff;
+    --sidebar-border: #e2e8f0;
+  }
+
+  /* 1. Emerald Academic (Sophisticated & Growth-oriented) */
+  :root[data-theme="emerald"] {
+    --background: #f0fdf4; /* Emerald 50 */
+    --foreground: #064e3b; /* Emerald 900 */
+    --primary-color: #10b981;
+    --primary-deep: #064e3b;
+    --secondary: #064e3b;
+    --secondary-foreground: #f0fdf4;
+    --accent: #dcfce7;
+    --muted: #f0fdf4;
+    --border: #bbf7d0;
+    --input: #bbf7d0;
+    --card-foreground: #064e3b;
+    --popover-foreground: #064e3b;
+  }
+
+  /* 2. Royal Amethyst (Premium & Exclusive feel) */
+  :root[data-theme="violet"] {
+    --background: #faf5ff; /* Violet 50 */
+    --foreground: #2e1065; /* Violet 900 */
+    --primary-color: #8b5cf6;
+    --primary-deep: #2e1065;
+    --secondary: #4c1d95;
+    --secondary-foreground: #faf5ff;
+    --accent: #f5f3ff;
+    --muted: #ede9fe;
+    --border: #ddd6fe;
+    --input: #ddd6fe;
+    --card-foreground: #2e1065;
+    --popover-foreground: #2e1065;
+  }
+
+  /* 3. Crimson Logic (High Energy & Urgent) */
+  :root[data-theme="crimson"] {
+    --background: #fff1f2; /* Rose 50 */
+    --foreground: #4c0519; /* Rose 900 */
+    --primary-color: #e11d48;
+    --primary-deep: #4c0519;
+    --secondary: #4c0519;
+    --secondary-foreground: #fff1f2;
+    --accent: #ffe4e6;
+    --muted: #f1f5f9;
+    --border: #fecdd3;
+    --input: #fecdd3;
+    --card-foreground: #4c0519;
+    --popover-foreground: #4c0519;
+  }
+
+  /* 4. Midnight Slate (The "Engineering" Aesthetic) */
+  :root[data-theme="slate"] {
+    --background: #f8fafc; /* Slate 50 */
+    --foreground: #0f172a; /* Slate 900 */
+    --primary-color: #64748b;
+    --primary-deep: #0f172a;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --accent: #f1f5f9;
+    --muted: #e2e8f0;
+    --border: #cbd5e1;
+    --input: #cbd5e1;
+    --card-foreground: #0f172a;
+    --popover-foreground: #0f172a;
+  }
+
+  /* 5. Electric Amber (Focus & Attention) */
+  :root[data-theme="amber"] {
+    --background: #fffbeb; /* Amber 50 */
+    --foreground: #451a03; /* Amber 900 */
+    --primary-color: #f59e0b;
+    --primary-deep: #451a03;
+    --secondary: #78350f;
+    --secondary-foreground: #fffbeb;
+    --accent: #fef3c7;
+    --muted: #fef3c7;
+    --border: #fde68a;
+    --input: #fde68a;
+    --card-foreground: #451a03;
+    --popover-foreground: #451a03;
+  }
+
+  /* 6. Cyber Cyan (Modern Tech & Clean) */
+  :root[data-theme="cyan"] {
+    --background: #ecfeff; /* Cyan 50 */
+    --foreground: #083344; /* Cyan 900 */
+    --primary-color: #06b6d4;
+    --primary-deep: #083344;
+    --secondary: #0e7490;
+    --secondary-foreground: #ecfeff;
+    --accent: #cffafe;
+    --muted: #f1f5f9;
+    --border: #a5f3fc;
+    --input: #a5f3fc;
+    --card-foreground: #083344;
+    --popover-foreground: #083344;
+  }
+
+  /* 7. Indigo Scholar (The Classic "Education" Blue) */
+  :root[data-theme="indigo"] {
+    --background: #eef2ff; /* Indigo 50 */
+    --foreground: #1e1b4b; /* Indigo 900 */
+    --primary-color: #6366f1;
+    --primary-deep: #1e1b4b;
+    --secondary: #312e81;
+    --secondary-foreground: #eef2ff;
+    --accent: #e0e7ff;
+    --muted: #e0e7ff;
+    --border: #c7d2fe;
+    --input: #c7d2fe;
+    --card-foreground: #1e1b4b;
+    --popover-foreground: #1e1b4b;
+  }
+
+  /* 8. Forest Deep (Calm & Trustworthy) */
+  :root[data-theme="forest"] {
+    --background: #f0fdf4;
+    --foreground: #052e16;
+    --primary-color: #22c55e;
+    --primary-deep: #052e16;
+    --secondary: #14532d;
+    --secondary-foreground: #f0fdf4;
+    --accent: #dcfce7;
+    --muted: #f1f5f9;
+    --border: #bbf7d0;
+    --input: #bbf7d0;
+    --card-foreground: #052e16;
+    --popover-foreground: #052e16;
+  }
+
+  /* 9. Sunset Orange (Warm & Engaging) */
+  :root[data-theme="sunset"] {
+    --background: #fff7ed; /* Orange 50 */
+    --foreground: #431407; /* Orange 900 */
+    --primary-color: #f97316;
+    --primary-deep: #431407;
+    --secondary: #9a3412;
+    --secondary-foreground: #fff7ed;
+    --accent: #ffedd5;
+    --muted: #f1f5f9;
+    --border: #fed7aa;
+    --input: #fed7aa;
+    --card-foreground: #431407;
+    --popover-foreground: #431407;
+  }
+
+  /* 10. Rose Quartz (Modern & Friendly) */
+  :root[data-theme="rose"] {
+    --background: #fff1f2;
+    --foreground: #4c0519;
+    --primary-color: #f43f5e;
+    --primary-deep: #4c0519;
+    --secondary: #881337;
+    --secondary-foreground: #fff1f2;
+    --accent: #ffe4e6;
+    --muted: #f1f5f9;
+    --border: #fecdd3;
+    --input: #fecdd3;
+    --card-foreground: #4c0519;
+    --popover-foreground: #4c0519;
+  }
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #f0f9ff; /* Sky 50 */
-  --foreground: #0f172a; /* Slate 900 */
   --card: #ffffff;
-  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: var(--primary-color); /* Sky 500 - Logo Color */
+  --primary: var(--primary-color);
   --primary-foreground: #ffffff;
-  --secondary: #0f172a; /* Slate 900 */
-  --secondary-foreground: #f0f9ff;
-  --muted: #e2e8f0;
-  --muted-foreground: #64748b;
-  --accent: #e0f2fe; /* Sky 100 */
   --accent-foreground: var(--primary-color);
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
   --ring: var(--primary-color);
   --chart-1: var(--primary-color);
-  --chart-2: #0f172a;
-  --chart-3: #38bdf8;
-  --chart-4: #7dd3fc;
-  --chart-5: #bae6fd;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
   --sidebar-primary: var(--primary-color);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f0f9ff;
   --sidebar-accent-foreground: var(--primary-color);
-  --sidebar-border: #e2e8f0;
   --sidebar-ring: var(--primary-color);
 }
 
-.dark {
-  --background: #020617; /* Slate 950 */
-  --foreground: #f0f9ff;
-  --card: #0f172a;
-  --card-foreground: #f0f9ff;
+/* :root[data-mode="dark"] {
+    --card: var(--background);
+    --popover: var(--background);
+
+    --primary: var(--primary-color);
+    --primary-foreground: #0b0f19; 
+
+    --accent-foreground: var(--foreground);
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --ring: var(--primary-color);
+
+    --chart-1: var(--primary-color);
+    --chart-2: var(--foreground);
+    --chart-3: var(--primary-color);
+
+    --sidebar-primary: var(--primary-color);
+    --sidebar-primary-foreground: #0b0f19;
+
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-ring: var(--primary-color);
+  } */
+
+/* [data-mode="dark"] { */
+  /* --background: #020617; /* Slate 950 */
+  /* --foreground: #f0f9ff;
+  --card: #0f172a; */ 
+  /* --card-foreground: #f0f9ff;
   --popover: #0f172a;
   --popover-foreground: #f0f9ff;
   --primary: var(--primary-color);
@@ -125,7 +311,208 @@
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f0f9ff;
   --sidebar-border: #1e293b;
-  --sidebar-ring: var(--primary-color);
+  --sidebar-ring: var(--primary-color); 
+ }  */
+
+:root[data-theme="blue"][data-mode="dark"] {
+  --background: #0c1424;
+  --foreground: #e0f2fe;
+  --primary-color: #38bdf8;
+  --primary-deep: #0ea5e9;
+  --secondary: #1e293b;
+  --secondary-foreground: #e0f2fe;
+  --accent: #082f49;
+  --muted: #1e293b;
+  --border: #1e293b;
+  --input: #1e293b;
+  --card: #0f172a;
+  --card-foreground: #e0f2fe;
+  --popover: #0f172a;
+  --popover-foreground: #e0f2fe;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #e0f2fe;
+  --sidebar-accent: #082f49;
+  --sidebar-border: #1e293b;
+}
+
+/* 1. Emerald Dark */
+:root[data-theme="emerald"][data-mode="dark"] {
+  --background: #022c22;
+  --foreground: #d1fae5;
+  --primary-color: #34d399;
+  --primary-deep: #10b981;
+  --secondary: #064e3b;
+  --secondary-foreground: #d1fae5;
+  --accent: #052e2b;
+  --muted: #064e3b;
+  --border: #065f46;
+  --input: #065f46;
+  --card: #033b2f;
+  --card-foreground: #d1fae5;
+  --popover: #033b2f;
+  --popover-foreground: #d1fae5;
+}
+
+/* 2. Violet Dark */
+:root[data-theme="violet"][data-mode="dark"] {
+  --background: #140f2d;
+  --foreground: #ede9fe;
+  --primary-color: #a78bfa;
+  --primary-deep: #8b5cf6;
+  --secondary: #2e1065;
+  --secondary-foreground: #ede9fe;
+  --accent: #1e1b4b;
+  --muted: #2e1065;
+  --border: #312e81;
+  --input: #312e81;
+  --card: #1a1338;
+  --card-foreground: #ede9fe;
+  --popover: #1a1338;
+  --popover-foreground: #ede9fe;
+}
+
+/* 3. Crimson Dark */
+:root[data-theme="crimson"][data-mode="dark"] {
+  --background: #1f0a12;
+  --foreground: #ffe4e6;
+  --primary-color: #fb7185;
+  --primary-deep: #e11d48;
+  --secondary: #4c0519;
+  --secondary-foreground: #ffe4e6;
+  --accent: #3f0f1a;
+  --muted: #4c0519;
+  --border: #881337;
+  --input: #881337;
+  --card: #2a0f18;
+  --card-foreground: #ffe4e6;
+  --popover: #2a0f18;
+  --popover-foreground: #ffe4e6;
+}
+
+/* 4. Slate Dark */
+:root[data-theme="slate"][data-mode="dark"] {
+  --background: #0b1220;
+  --foreground: #f1f5f9;
+  --primary-color: #94a3b8;
+  --primary-deep: #64748b;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --accent: #1e293b;
+  --muted: #1e293b;
+  --border: #334155;
+  --input: #334155;
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+  --popover: #0f172a;
+  --popover-foreground: #f1f5f9;
+}
+
+/* 5. Amber Dark */
+:root[data-theme="amber"][data-mode="dark"] {
+  --background: #1c1304;
+  --foreground: #fef3c7;
+  --primary-color: #fbbf24;
+  --primary-deep: #f59e0b;
+  --secondary: #451a03;
+  --secondary-foreground: #fef3c7;
+  --accent: #3f1d06;
+  --muted: #451a03;
+  --border: #78350f;
+  --input: #78350f;
+  --card: #241504;
+  --card-foreground: #fef3c7;
+  --popover: #241504;
+  --popover-foreground: #fef3c7;
+}
+
+/* 6. Cyan Dark */
+:root[data-theme="cyan"][data-mode="dark"] {
+  --background: #052f36;
+  --foreground: #cffafe;
+  --primary-color: #22d3ee;
+  --primary-deep: #06b6d4;
+  --secondary: #083344;
+  --secondary-foreground: #cffafe;
+  --accent: #083344;
+  --muted: #0e7490;
+  --border: #155e75;
+  --input: #155e75;
+  --card: #073c46;
+  --card-foreground: #cffafe;
+  --popover: #073c46;
+  --popover-foreground: #cffafe;
+}
+
+/* 7. Indigo Dark */
+:root[data-theme="indigo"][data-mode="dark"] {
+  --background: #0f1229;
+  --foreground: #e0e7ff;
+  --primary-color: #818cf8;
+  --primary-deep: #6366f1;
+  --secondary: #1e1b4b;
+  --secondary-foreground: #e0e7ff;
+  --accent: #1e1b4b;
+  --muted: #312e81;
+  --border: #4338ca;
+  --input: #4338ca;
+  --card: #151735;
+  --card-foreground: #e0e7ff;
+  --popover: #151735;
+  --popover-foreground: #e0e7ff;
+}
+
+/* 8. Forest Dark */
+:root[data-theme="forest"][data-mode="dark"] {
+  --background: #041b10;
+  --foreground: #dcfce7;
+  --primary-color: #4ade80;
+  --primary-deep: #22c55e;
+  --secondary: #14532d;
+  --secondary-foreground: #dcfce7;
+  --accent: #052e16;
+  --muted: #14532d;
+  --border: #166534;
+  --input: #166534;
+  --card: #062417;
+  --card-foreground: #dcfce7;
+  --popover: #062417;
+  --popover-foreground: #dcfce7;
+}
+
+/* 9. Sunset Dark */
+:root[data-theme="sunset"][data-mode="dark"] {
+  --background: #1c0f05;
+  --foreground: #ffedd5;
+  --primary-color: #fb923c;
+  --primary-deep: #f97316;
+  --secondary: #431407;
+  --secondary-foreground: #ffedd5;
+  --accent: #7c2d12;
+  --muted: #431407;
+  --border: #9a3412;
+  --input: #9a3412;
+  --card: #241207;
+  --card-foreground: #ffedd5;
+  --popover: #241207;
+  --popover-foreground: #ffedd5;
+}
+
+/* 10. Rose Dark */
+:root[data-theme="rose"][data-mode="dark"] {
+  --background: #1a0b12;
+  --foreground: #ffe4e6;
+  --primary-color: #fb7185;
+  --primary-deep: #f43f5e;
+  --secondary: #4c0519;
+  --secondary-foreground: #ffe4e6;
+  --accent: #881337;
+  --muted: #4c0519;
+  --border: #9f1239;
+  --input: #9f1239;
+  --card: #220d14;
+  --card-foreground: #ffe4e6;
+  --popover: #220d14;
+  --popover-foreground: #ffe4e6;
 }
 
 @layer base {

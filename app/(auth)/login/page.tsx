@@ -16,12 +16,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { StaffRole, StaffRoles } from "@/features/db-ts/objects";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -44,15 +45,15 @@ export default function LoginPage() {
       router.refresh();
 
       const orgRoles = data.user?.app_metadata?.org_roles || {};
-      const isStaff = Object.values(orgRoles).some((role) => 
-        StaffRoles.includes(role as StaffRole)
+      const isStaff = Object.values(orgRoles).some((role) =>
+        StaffRoles.includes(role as StaffRole),
       );
 
       if (isStaff) {
         router.push("/teacher-dashboard");
         return;
       }
-      router.push("/student-dashboard");
+      router.push("/user-dashboard");
     } catch {
       toast.error("An unexpected error occurred");
     } finally {
@@ -88,21 +89,45 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                title="Enter your password"
-                className="text-aceverse-navy font-semibold"
-              >
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                className="border-aceverse-blue/20 focus:border-aceverse-blue"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="password"
+                  title="Enter your password"
+                  className="text-aceverse-navy font-semibold"
+                >
+                  Password
+                </Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-aceverse-blue hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="border-aceverse-blue/20 focus:border-aceverse-blue pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-0 h-full px-3 py-2 text-aceverse-navy/60 hover:text-aceverse-navy"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {showPassword ? "Hide password" : "Show password"}
+                  </span>
+                </button>
+              </div>
             </div>
             <Button
               type="submit"

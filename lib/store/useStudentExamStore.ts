@@ -3,7 +3,7 @@ import {
   ExamQuestionForStartOrResumeExam,
   ExamSegmentForStartOrResumeExam,
   UserAnswerForStartOrResumeExam,
-} from "../api/student";
+} from "../functions/student-client";
 
 type Metadata = {
   id: string; // UUID

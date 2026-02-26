@@ -70,7 +70,7 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                   {user ? (
                     !isStaff ? (
-                      <Link href="/student-dashboard" className="w-full sm:w-auto">
+                      <Link href="/user-dashboard" className="w-full sm:w-auto">
                         <Button
                           size="lg"
                           className="w-full sm:w-auto text-lg h-12 px-8 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300"
@@ -245,7 +245,6 @@ export default function Home() {
               </h4>
               <p className="text-muted-foreground leading-relaxed">
                 Visualize your strengths and weaknesses with our advanced dashboard.
-                Track your percentile ranking against the competition.
               </p>
             </div>
 

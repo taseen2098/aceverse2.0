@@ -10,7 +10,7 @@ export const OrgStatuses = ["active", "suspended"] as const;
 export type OrgStatus = (typeof OrgStatuses)[number];
 
 export type QuestionType = "mcq" | "short_answer";
-export type PassThresholdType = "percentile" | "fixed" | "none";
+export type PassThresholdType = "percent" | "fixed" | "none";
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
@@ -23,7 +23,7 @@ export interface AceVerseUserMetadata {
 }
 
 export type AceVerseUser = User & { user_metadata: AceVerseUserMetadata };
-export type MiniUser = Required<Pick<AceVerseUser, "id" | "email">> ;
+export type MiniUser = Required<Pick<AceVerseUser, "id" | "email">>;
 export type uid = AceVerseUser["id"];
 
 /**
@@ -34,16 +34,12 @@ export type uid = AceVerseUser["id"];
  * 4 All @policy and @*policy should be turned to policy
  */
 
-
-
 /**
  * For all table
  * @policy "Admin can do anything"
  */
 
-
 type JoinSystem = "public" | "request";
-
 
 /**
  * @policy "Owners manage organization"
@@ -55,12 +51,21 @@ interface DBOrganization {
   owner_id: uid;
   status: OrgStatus;
   logo_url: string | null;
+  banner_url: string | null;
   theme_color: string | null;
   join_system: JoinSystem;
   created_at: string;
 }
 export type Organization = Omit<DBOrganization, "owner_id">;
 export type OrganizationForMembership = Omit<Organization, "created_at">;
+
+export interface DBProfile {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  updated_at: string;
+}
+
 
 /**
  * "Created by server actions after deciding in server if allowed"
@@ -74,17 +79,19 @@ interface DBMembership {
   created_at: string;
   organization?: Organization["id"];
   on_free_trial: boolean;
+  status: "active" | "suspended" | "pending" | "cancelled";
 }
+
 export type Membership = DBMembership & {
   organization: OrganizationForMembership;
 };
 
-export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
+export type PaymentStatus = "pending" | "success" | "failed" | "cancelled";
 
 export interface DBPayment {
   id: string;
   membership_id: string;
-  tran_id: string;         // Your Order ID (sent to SSL)
+  tran_id: string; // Your Order ID (sent to SSL)
   bank_tran_id: string | null; // SSL's ID (received from SSL)
   amount: number;
   currency: string;
@@ -121,7 +128,8 @@ export interface Userfetched {
 // -----------------------------------------------------------
 
 /** @orgcontentpolicy  */
-export interface DBSubject { // Students can access only via server actions if they have access
+export interface DBSubject {
+  // Students can access only via server actions if they have access
   id: string;
   organization_id: string;
   name: string;
@@ -135,6 +143,8 @@ export interface DBExam {
   // UNIQUE(id, organization_id)
   title: string;
   description: string | null;
+  questions_count: number; // DEFAULT: 0
+
   created_by: string | null;
   is_published: boolean;
   has_publishable_changes: boolean;
@@ -167,7 +177,10 @@ export interface DBExamBatchMapper {
   batch_id: DBBatch["id"];
 }
 
-export type ExamWhileBuilding = WithRequired<Partial<DBExam>, "id" | "organization_id">;
+export type ExamWhileBuilding = WithRequired<
+  Partial<DBExam>,
+  "id" | "organization_id"
+>;
 
 export type ExamForTaking = DBExam & {
   segments: ExamSegmentForTakingExam[];
@@ -219,7 +232,6 @@ export type QuestionWhileBuildingForSingle = WithRequired<
   "id" | "question_type"
 >;
 
-
 /** @orgcontentpolicy  */
 export interface DBExamSegment {
   id: string;
@@ -244,25 +256,39 @@ export type ExamSegmentWhileBuilding = WithRequired<
   "id" | "exam_id" | "order_index"
 >;
 
-
 /** @staffonlyreadpolicy  */
 export interface DBSubmission {
   id: string;
   organization_id: DBOrganization["id"];
   exam_id: DBExam["id"];
-  student_id: AceVerseUser["id"];
+  student_member_id: AceVerseUser["id"];
   started_at: string;
   submitted_at: string | null;
+  // Result Data (Merged from your SQL schema)
+  total_score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  is_graded: boolean;
+  graded_at: string | null;
 }
 
 /** @staffonlyreadpolicy  */
 // CREATE TRIGGER: if exam.allow_instant_answer then instant grade calc
-export interface DBSubmissionSecretData { 
-  submission_id: DBSubmission["id"];
-  organization_id: DBOrganization["id"];
-  exam_id: DBExam["id"];
-  is_graded: boolean;
-  total_score: number | null;
+/** @staffonlyreadpolicy */
+export interface DBSegmentScore {
+  id: string;
+  submission_id: string;
+  segment_id: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  total_questions: number;
+  answered: number;
+  correct: number;
+  incorrect: number;
+  skipped: number;
 }
 
 export type SubmissionForTakingExam = DBSubmission & {
@@ -278,6 +304,10 @@ export interface DBAnswer {
   submission_id: DBSubmission["id"];
   question_id: DBQuestion["id"];
   answer_text: string | null;
+  // After Grading
+  is_correct: boolean;
+  marks_awarded: number;
+  is_marked: boolean;
 }
 
 /** @staffonlypolicy  */
@@ -291,7 +321,7 @@ export interface DBBatch {
 export interface DBBatchMemberMapper {
   organization_id: DBOrganization["id"];
   batch_id: string;
-  student_id: uid; 
+  student_member_id: uid;
   // UNIQUE(batch_id, student_id)
 }
 
@@ -318,7 +348,10 @@ export interface DBAnnouncement {
 }
 
 // For creating a new announcement (omitting generated fields)
-export type CreateAnnouncement = Omit<DBAnnouncement, 'id' | 'created_at' | 'updated_at'>;
+export type CreateAnnouncement = Omit<
+  DBAnnouncement,
+  "id" | "created_at" | "updated_at"
+>;
 
 // For updates (all fields optional except ID)
 export type UpdateAnnouncement = Partial<CreateAnnouncement> & { id: string };

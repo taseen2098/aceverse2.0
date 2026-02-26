@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { staffLinks } from "./app/org/dashboard/_lib/navLinks";
+import { staffLinks } from "./app/org/[organization_id]/_lib/navLinks";
 
 export default async function proxy(request: NextRequest) {
   const {pathname} = request.nextUrl;

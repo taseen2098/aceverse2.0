@@ -30,7 +30,7 @@ The AceVerse database is designed for a multi-tenant examination system. It util
   - `org.status`: `pending`, `active`, `suspended`.
   - `profile.role`: `user`, `admin`.
   - `membership.role`: `primary_owner`, `manager`, `teacher`, `student`.
-  - `exam.pass_threshold_type`: `percentile`, `fixed`, `none`.
+  - `exam.pass_threshold_type`: `percent`, `fixed`, `none`.
   - `question.type`: `mcq`, `short_answer`.
 
 ## Relationships

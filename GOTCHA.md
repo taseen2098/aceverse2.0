@@ -1,0 +1,1 @@
+supabase.auth.refreshSession() -> after profile logo change

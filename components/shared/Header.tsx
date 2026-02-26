@@ -23,7 +23,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Image from "next/image";
-import { OrgSidebar } from "@/app/org/_components/org-sidebar/OrgSidebar";
+import { OrgSidebar } from "@/app/org/[organization_id]/_components/org-sidebar/OrgSidebar";
 import { useBreadcrumbs } from "@/lib/hooks/useBreadcrumbs";
 export const dynamic = "force-dynamic";
 
@@ -42,6 +42,8 @@ const Header = () => {
   const isOrgPath = pathSegments[0] === "org" && pathSegments.length > 1;
   const logout = useAuthStore((state) => state.signOut);
   const router = useRouter();
+
+  const memberships = useAuthStore(state => state.memberships)
 
   const handleSignOut = async () => {
     await logout();
@@ -81,7 +83,9 @@ const Header = () => {
                   </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-2 mt-6">
-                  {isOrgPath && organizationId ? (
+                  {isOrgPath
+                  //  && organizationId 
+                   ? (
                     <OrgSidebar />
                   ) : (
                     navLinks.map((link) => {
@@ -120,7 +124,7 @@ const Header = () => {
           </div>
 
           <Link href="/" className="flex items-center gap-2">
-            <div className="relative w-50 h-20">
+            <div className="relative w-30 h-15">
               <Image
                 src="/Logo.png"
                 alt="AceVerse Logo"
@@ -257,6 +261,7 @@ const Header = () => {
             <BreadcrumbList>
               {breadcrumbs.map((crumb, index) => {
                 const isLast = index === breadcrumbs.length - 1;
+                if (crumb.title === "Home") return null;
                 return (
                   <React.Fragment key={crumb.href}>
                     {index > 0 && <BreadcrumbSeparator />}

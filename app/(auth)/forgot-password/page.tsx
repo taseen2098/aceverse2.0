@@ -28,7 +28,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/(auth)/change-password`,
+        redirectTo: `${window.location.origin}/change-password`,
       });
 
       if (error) throw error;
@@ -46,19 +46,26 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-              <KeyRound className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+      <div className="flex min-h-screen items-center justify-center bg-aceverse-ice px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md border-aceverse-blue/20 shadow-xl">
+          <CardHeader className="text-center space-y-1">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-aceverse-navy/5">
+              <KeyRound className="h-8 w-8 text-aceverse-blue" />
             </div>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>
-              We&apos;ve sent a password reset link to <strong>{email}</strong>.
+            <CardTitle className="text-3xl font-bold text-center text-aceverse-navy">
+              Check your email
+            </CardTitle>
+            <CardDescription className="text-center">
+              We&apos;ve sent a password reset link to{" "}
+              <strong className="text-aceverse-navy">{email}</strong>.
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button variant="outline" className="w-full" asChild>
+            <Button
+              variant="outline"
+              className="w-full border-aceverse-blue/20 text-aceverse-navy hover:bg-aceverse-blue/10"
+              asChild
+            >
               <Link href="/login">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to login
@@ -71,23 +78,28 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-aceverse-ice px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md border-aceverse-blue/20 shadow-xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Forgot password?</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center text-aceverse-navy">
+            Forgot password?
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your email address and we&apos;ll send you a link to reset your
             password.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+          <CardContent className="grid gap-4 my-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-aceverse-navy font-semibold">
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
+                className="border-aceverse-blue/20 focus:border-aceverse-blue text-md h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -96,10 +108,18 @@ export default function ForgotPasswordPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button
+              className="w-full bg-aceverse-blue hover:bg-aceverse-blue/90 text-white font-bold h-11 text-md"
+              type="submit"
+              disabled={loading}
+            >
               {loading ? "Sending link..." : "Send reset link"}
             </Button>
-            <Button variant="link" className="px-0 font-normal" asChild>
+            <Button
+              variant="link"
+              className="px-0 font-normal text-aceverse-navy hover:text-aceverse-blue"
+              asChild
+            >
               <Link href="/login" className="flex items-center">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to login
